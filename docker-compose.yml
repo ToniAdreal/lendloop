@@ -1,0 +1,37 @@
+# LendLoop: self-hosted n8n for the automation workflows in ./n8n
+#
+# Usage:
+#   cp .env.example .env   # fill in LENDLOOP_SHARED_SECRET, N8N_WEBHOOK_SECRET,
+#                          # CONVEX_SITE_URL (your Convex *site* URL)
+#   docker compose up -d
+#   # open http://localhost:5678, create the owner account, then import the
+#   # three workflows from ./n8n and activate them.
+#
+# The secrets below are interpolated from your local .env by docker compose.
+# They are referenced inside the workflows only via $env, never hardcoded.
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: lendloop-n8n
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: ${WEBHOOK_URL:-http://localhost:5678/}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-UTC}
+      # Secrets / endpoints consumed by the workflows via $env:
+      N8N_WEBHOOK_SECRET: ${N8N_WEBHOOK_SECRET:?set N8N_WEBHOOK_SECRET in .env}
+      LENDLOOP_SHARED_SECRET: ${LENDLOOP_SHARED_SECRET:?set LENDLOOP_SHARED_SECRET in .env}
+      CONVEX_SITE_URL: ${CONVEX_SITE_URL:?set CONVEX_SITE_URL in .env}
+      # Privacy hygiene for a demo box:
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
